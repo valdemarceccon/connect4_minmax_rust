@@ -2,7 +2,6 @@ mod board;
 mod game;
 
 use board::Players;
-use colored::*;
 use game::GameState;
 
 use io::Write;
