@@ -1,7 +1,7 @@
 pub struct Board {
-    rows: usize,
-    cols: usize,
-    pieces: Vec<Option<Player>>,
+    pub rows: usize,
+    pub cols: usize,
+    pub pieces: Vec<Option<Player>>,
     played: usize,
 }
 
