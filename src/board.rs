@@ -32,6 +32,17 @@ impl Board {
         }
     }
 
+    pub fn get_piece_at(&self, row: usize, col: usize) -> Option<Player> {
+        if row >= self.rows || col >= self.cols {
+            return None;
+        }
+
+        match self.pieces[self.calc_index(row, col)] {
+            Some(player) => Some(player),
+            None => None,
+        }
+    }
+
     fn find_empty_row_in_column(&self, col: usize) -> Option<usize> {
         let row = self
             .pieces
@@ -47,18 +58,7 @@ impl Board {
         }
     }
 
-    pub fn get_piece_at(&self, row: usize, col: usize) -> Option<Player> {
-        if row >= self.rows || col >= self.cols {
-            return None;
-        }
-
-        match self.pieces[self.calc_index(row, col)] {
-            Some(player) => Some(player),
-            None => None,
-        }
-    }
-
-    pub fn set_piece_at(&mut self, row: usize, col: usize, player: Player) {
+    fn set_piece_at(&mut self, row: usize, col: usize, player: Player) {
         self.pieces[row * self.cols + col] = Some(player);
     }
 
