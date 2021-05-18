@@ -2,6 +2,7 @@ pub struct Board {
     rows: usize,
     cols: usize,
     pieces: Vec<Option<Player>>,
+    played: usize,
 }
 
 #[derive(Debug, PartialEq)]
@@ -18,7 +19,12 @@ pub enum Player {
 impl Board {
     pub fn new(rows: usize, cols: usize) -> Self {
         let pieces = (0..cols * rows).map(|_| None).collect();
-        Board { rows, cols, pieces }
+        Board {
+            rows,
+            cols,
+            pieces,
+            played: 0,
+        }
     }
 
     pub fn play(&mut self, col: usize, p: Player) -> Result<(), PlayErr> {
@@ -26,10 +32,15 @@ impl Board {
         match first_not_empty {
             Some(n) => {
                 self.set_piece_at(n, col, p);
+                self.played += 1;
                 Ok(())
             }
             None => Err(PlayErr::FullColumn),
         }
+    }
+
+    pub fn is_board_full(&self) -> bool {
+        self.played >= self.rows * self.cols
     }
 
     pub fn get_piece_at(&self, row: usize, col: usize) -> Option<Player> {
@@ -109,6 +120,20 @@ mod test {
         }
         let found_row = board.find_empty_row_in_column(0);
         assert_eq!(found_row, None);
+    }
+
+    #[test]
+    fn board_full_counter_is_full_when_board_is_full() -> Result<(), PlayErr> {
+        let mut board = Board::new(ROWS, COLS);
+        for c in 0..COLS {
+            for _ in 0..ROWS {
+                assert_eq!(board.is_board_full(), false);
+                board.play(c, Player::YELLOW)?;
+            }
+        }
+
+        assert_eq!(board.is_board_full(), true);
+        Ok(())
     }
 
     #[test]
