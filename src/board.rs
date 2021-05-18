@@ -12,8 +12,8 @@ pub enum PlayErr {
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Player {
-    YELLOW,
-    RED,
+    Yellow,
+    Red,
 }
 
 impl Board {
@@ -48,10 +48,7 @@ impl Board {
             return None;
         }
 
-        match self.pieces[self.calc_index(row, col)] {
-            Some(player) => Some(player),
-            None => None,
-        }
+        self.pieces[self.calc_index(row, col)]
     }
 
     fn find_empty_row_in_column(&self, col: usize) -> Option<usize> {
@@ -107,7 +104,7 @@ mod test {
     #[test]
     fn find_row_when_searching_for_non_empty_col_in_a_empty_col() {
         let mut board = Board::new(ROWS, COLS);
-        board.pieces[target_index(ROWS - 1, 0)] = Some(Player::RED);
+        board.pieces[target_index(ROWS - 1, 0)] = Some(Player::Red);
         let found_row = board.find_empty_row_in_column(0);
         assert_eq!(found_row, Some(ROWS - 2));
     }
@@ -116,7 +113,7 @@ mod test {
     fn find_row_when_searching_for_full_col_in_a_empty_col() {
         let mut board = Board::new(ROWS, COLS);
         for r in 0..ROWS {
-            board.pieces[target_index(r, 0)] = Some(Player::RED);
+            board.pieces[target_index(r, 0)] = Some(Player::Red);
         }
         let found_row = board.find_empty_row_in_column(0);
         assert_eq!(found_row, None);
@@ -128,7 +125,7 @@ mod test {
         for c in 0..COLS {
             for _ in 0..ROWS {
                 assert_eq!(board.is_board_full(), false);
-                board.play(c, Player::YELLOW)?;
+                board.play(c, Player::Yellow)?;
             }
         }
 
@@ -139,23 +136,23 @@ mod test {
     #[test]
     fn get_piece_at() -> Result<(), PlayErr> {
         let mut board = Board::new(ROWS, COLS);
-        board.play(0, Player::YELLOW)?;
-        assert_eq!(board.get_piece_at(ROWS - 1, 0), Some(Player::YELLOW));
-        board.play(1, Player::YELLOW)?;
-        assert_eq!(board.get_piece_at(ROWS - 1, 1), Some(Player::YELLOW));
-        board.play(0, Player::YELLOW)?;
-        assert_eq!(board.get_piece_at(ROWS - 2, 0), Some(Player::YELLOW));
+        board.play(0, Player::Yellow)?;
+        assert_eq!(board.get_piece_at(ROWS - 1, 0), Some(Player::Yellow));
+        board.play(1, Player::Yellow)?;
+        assert_eq!(board.get_piece_at(ROWS - 1, 1), Some(Player::Yellow));
+        board.play(0, Player::Yellow)?;
+        assert_eq!(board.get_piece_at(ROWS - 2, 0), Some(Player::Yellow));
         Ok(())
     }
 
     #[test]
     fn play_not_empty_column() -> Result<(), PlayErr> {
         let mut board = Board::new(ROWS, COLS);
-        board.play(0, Player::YELLOW)?;
-        board.play(0, Player::RED)?;
+        board.play(0, Player::Yellow)?;
+        board.play(0, Player::Red)?;
 
         if let Some(p) = board.pieces[(ROWS - 2) * COLS] {
-            assert_eq!(p, Player::RED);
+            assert_eq!(p, Player::Red);
         } else {
             panic!("should not have failed {:?}", board.pieces);
         }
