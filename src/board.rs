@@ -1,84 +1,186 @@
-pub const ROWS: usize = 7;
-pub const COLS: usize = 6;
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Board {
-    state: Vec<Option<Players>>,
+    rows: usize,
+    cols: usize,
+    pieces: Vec<Option<Player>>,
+    played: usize,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum PlayErr {
+    FullColumn,
+    OutOfBounds,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum Player {
+    Yellow,
+    Red,
 }
 
 impl Board {
-    pub fn new() -> Self {
-        let mut state = Vec::with_capacity(ROWS * COLS);
+    pub fn new(rows: usize, cols: usize) -> Self {
+        let pieces = (0..cols * rows).map(|_| None).collect();
+        Board {
+            rows,
+            cols,
+            pieces,
+            played: 0,
+        }
+    }
 
-        for _ in 0..ROWS * COLS {
-            state.push(None);
+    pub fn play(&mut self, col: usize, p: Player) -> Result<(), PlayErr> {
+        if col >= self.cols {
+            return Err(PlayErr::OutOfBounds);
+        }
+        let first_not_empty = self.find_empty_row_in_column(col);
+        match first_not_empty {
+            Some(n) => {
+                self.set_piece_at(n, col, p);
+                self.played += 1;
+                Ok(())
+            }
+            None => Err(PlayErr::FullColumn),
+        }
+    }
+
+    pub fn is_board_full(&self) -> bool {
+        self.played >= self.rows * self.cols
+    }
+
+    pub fn get_piece_at(&self, row: usize, col: usize) -> Option<Player> {
+        if row >= self.rows || col >= self.cols {
+            return None;
         }
 
-        Board { state }
+        self.pieces[self.calc_index(row, col)]
     }
 
-    pub fn piece_at(&self, row: usize, col: usize) -> Option<Players> {
-        self.state[index(row, col)].clone()
+    pub fn get_pieces(&self) -> &Vec<Option<Player>> {
+        &self.pieces
     }
 
-    pub fn play(&mut self, player: Players, col: usize) {
-        for i in (0..ROWS).rev() {
-            if self.piece_at(i, col) == None {
-                self.state[index(i, col)] = Some(player);
-                break;
+    pub fn get_columns(&self) -> usize {
+        self.cols
+    }
+
+    pub fn get_rows(&self) -> usize {
+        self.rows
+    }
+
+    fn find_empty_row_in_column(&self, col: usize) -> Option<usize> {
+        let row = self
+            .pieces
+            .iter()
+            .skip(col)
+            .step_by(self.cols)
+            .position(|p| *p != None)
+            .or(Some(self.rows));
+
+        match row {
+            Some(0) | None => None,
+            Some(n) => Some(n - 1),
+        }
+    }
+
+    fn set_piece_at(&mut self, row: usize, col: usize, player: Player) {
+        self.pieces[row * self.cols + col] = Some(player);
+    }
+
+    fn calc_index(&self, row: usize, col: usize) -> usize {
+        (self.cols * row) + col
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    const ROWS: usize = 6;
+    const COLS: usize = 6;
+    #[test]
+    fn create_new_instance() {
+        let b = Board::new(ROWS, COLS);
+        assert_eq!(b.pieces.capacity(), ROWS * COLS);
+
+        for i in 0..ROWS * COLS {
+            assert_eq!(None, b.pieces[i]);
+        }
+    }
+    #[test]
+    fn find_row_when_searching_for_empty_col_in_a_empty_col() {
+        let board = Board::new(ROWS, COLS);
+
+        let found_row = board.find_empty_row_in_column(0);
+        assert_eq!(found_row, Some(ROWS - 1));
+    }
+
+    fn target_index(row: usize, col: usize) -> usize {
+        row * COLS + col
+    }
+
+    #[test]
+    fn find_row_when_searching_for_non_empty_col_in_a_empty_col() {
+        let mut board = Board::new(ROWS, COLS);
+        board.pieces[target_index(ROWS - 1, 0)] = Some(Player::Red);
+        let found_row = board.find_empty_row_in_column(0);
+        assert_eq!(found_row, Some(ROWS - 2));
+    }
+
+    #[test]
+    fn find_row_when_searching_for_full_col_in_a_empty_col() {
+        let mut board = Board::new(ROWS, COLS);
+        for r in 0..ROWS {
+            board.pieces[target_index(r, 0)] = Some(Player::Red);
+        }
+        let found_row = board.find_empty_row_in_column(0);
+        assert_eq!(found_row, None);
+    }
+
+    #[test]
+    fn board_full_counter_is_full_when_board_is_full() -> Result<(), PlayErr> {
+        let mut board = Board::new(ROWS, COLS);
+        for c in 0..COLS {
+            for _ in 0..ROWS {
+                assert_eq!(board.is_board_full(), false);
+                board.play(c, Player::Yellow)?;
             }
         }
+
+        assert_eq!(board.is_board_full(), true);
+        Ok(())
     }
 
-    pub fn get_row(&self, row: usize) -> Vec<Option<Players>> {
-        let mut ret = Vec::new();
-
-        for i in 0..row {
-            ret.push(self.piece_at(row, i));
-        }
-
-        ret
+    #[test]
+    fn get_piece_at() -> Result<(), PlayErr> {
+        let mut board = Board::new(ROWS, COLS);
+        board.play(0, Player::Yellow)?;
+        assert_eq!(board.get_piece_at(ROWS - 1, 0), Some(Player::Yellow));
+        board.play(1, Player::Yellow)?;
+        assert_eq!(board.get_piece_at(ROWS - 1, 1), Some(Player::Yellow));
+        board.play(0, Player::Yellow)?;
+        assert_eq!(board.get_piece_at(ROWS - 2, 0), Some(Player::Yellow));
+        Ok(())
     }
 
-    pub fn get_col(&self, col: usize) -> Vec<Option<Players>> {
-        let mut ret = Vec::new();
+    #[test]
+    fn play_not_empty_column() -> Result<(), PlayErr> {
+        let mut board = Board::new(ROWS, COLS);
+        board.play(0, Player::Yellow)?;
+        board.play(0, Player::Red)?;
 
-        for i in 0..col {
-            ret.push(self.piece_at(i, col));
+        if let Some(p) = board.pieces[(ROWS - 2) * COLS] {
+            assert_eq!(p, Player::Red);
+        } else {
+            panic!("should not have failed {:?}", board.pieces);
         }
 
-        ret
+        Ok(())
     }
 
-    fn is_col_full(&self, col: usize) -> bool {
-        self.piece_at(0, col) != None
+    #[test]
+    fn play_out_of_bounds_results_in_error() {
+        let mut board = Board::new(ROWS, COLS);
+        let r = board.play(COLS, Player::Red);
+        assert_eq!(Err(PlayErr::OutOfBounds), r);
     }
-
-    pub fn is_play_valid(&self, col: i8) -> bool {
-        if col < 0 {
-            return false;
-        }
-
-        let col = col as usize;
-
-        if col >= COLS {
-            return false;
-        }
-
-        if self.is_col_full(col) {
-            return false;
-        }
-
-        true
-    }
-}
-
-fn index(row: usize, col: usize) -> usize {
-    row * COLS + col
-}
-
-#[derive(Debug, PartialEq, Clone)]
-pub enum Players {
-    RED,
-    YELLOW,
 }

@@ -1,55 +1,118 @@
-use super::board::{Board, Players, COLS};
+use super::board;
+use super::validator;
 
-#[derive(Debug)]
-pub struct GameState {
-    pub board: Board,
-    current_player: Players,
-    winner: Option<Players>,
+pub struct Game {
+    board: board::Board,
+    current_player: board::Player,
+    winner: Option<board::Player>,
 }
 
-pub enum GameResult {
-    ENDED,
-    RUNNING,
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum GameState {
+    Playing,
+    Tie,
+    Winner(board::Player),
 }
 
-impl GameState {
-    pub fn new() -> Self {
-        GameState {
-            board: Board::new(),
-            current_player: Players::YELLOW,
+const ROWS: usize = 6;
+const COLS: usize = 7;
+
+impl Game {
+    pub fn new(first_player: board::Player) -> Self {
+        Game {
+            board: board::Board::new(ROWS, COLS),
+            current_player: first_player,
             winner: None,
         }
     }
 
-    pub fn play(&mut self, col: i8) -> Result<(), &str> {
-        if !self.board.is_play_valid(col) {
-            return Err("Invalid play");
+    pub fn with_size(rows: usize, cols: usize, first_player: board::Player) -> Self {
+        Game {
+            board: board::Board::new(rows, cols),
+            current_player: first_player,
+            winner: None,
+        }
+    }
+
+    pub fn play(&mut self, col: usize) -> Result<GameState, board::PlayErr> {
+        self.board.play(col, self.current_player)?;
+
+        if let Some(player) = validator::get_winner(&self.board) {
+            self.winner = Some(player);
+            return Ok(GameState::Winner(player));
         }
 
-        self.board.play(self.current_player.clone(), col as usize);
-        self.toggle_player();
+        if self.board.is_board_full() {
+            return Ok(GameState::Tie);
+        }
+
+        self.current_player = match self.current_player {
+            board::Player::Yellow => board::Player::Red,
+            board::Player::Red => board::Player::Yellow,
+        };
+        Ok(GameState::Playing)
+    }
+
+    pub fn get_board(&self) -> &board::Board {
+        &self.board
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn game_construction() {
+        let game = Game::new(board::Player::Yellow);
+        assert_eq!(game.current_player, board::Player::Yellow);
+    }
+
+    #[test]
+    fn toggle_player_on_play() -> Result<(), board::PlayErr> {
+        let mut game = Game::new(board::Player::Yellow);
+        let col = 1;
+        game.play(col)?;
+        assert_eq!(game.current_player, board::Player::Red);
+
+        game.play(col)?;
+        assert_eq!(game.current_player, board::Player::Yellow);
+
         Ok(())
     }
 
-    fn toggle_player(&mut self) {
-        self.current_player = match self.current_player {
-            Players::RED => Players::YELLOW,
-            Players::YELLOW => Players::RED,
-        }
-    }
-
-    pub fn get_valid_plays(&self) -> Vec<usize> {
-        let mut ret = Vec::new();
-        for col in 0..COLS {
-            match self.board.piece_at(0, col) {
-                None => ret.push(col),
-                _ => (),
+    #[test]
+    fn game_finish_in_tie() -> Result<(), board::PlayErr> {
+        let mut game = Game::with_size(3, 3, board::Player::Yellow);
+        let mut game_state = GameState::Playing;
+        for c in 0..game.board.get_columns() {
+            for _ in 0..game.board.get_rows() {
+                assert_eq!(game_state, GameState::Playing);
+                game_state = game.play(c)?;
             }
         }
-        ret
+
+        assert_eq!(game_state, GameState::Tie);
+
+        Ok(())
     }
 
-    pub fn get_current_player(&self) -> &Players {
-        &self.current_player
+    #[test]
+    fn does_not_change_state_when_some_error_occours() -> Result<(), board::PlayErr> {
+        let mut game = Game::with_size(3, 3, board::Player::Yellow);
+        game.play(0)?;
+        game.play(0)?;
+        game.play(0)?;
+        let r = game.play(0);
+        let current_player = game.current_player;
+        let current_winner = game.winner;
+        let current_board = game.board.clone();
+        assert_eq!(Err(board::PlayErr::FullColumn), r);
+
+        assert_eq!(current_player, game.current_player);
+        assert_eq!(current_winner, game.winner);
+        assert_eq!(current_board.get_pieces(), game.board.get_pieces());
+
+        Ok(())
     }
 }
