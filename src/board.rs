@@ -1,7 +1,7 @@
 pub struct Board {
-    pub rows: usize,
-    pub cols: usize,
-    pub pieces: Vec<Option<Player>>,
+    rows: usize,
+    cols: usize,
+    pieces: Vec<Option<Player>>,
     played: usize,
 }
 
@@ -49,6 +49,18 @@ impl Board {
         }
 
         self.pieces[self.calc_index(row, col)]
+    }
+
+    pub fn get_pieces(&self) -> &Vec<Option<Player>> {
+        &self.pieces
+    }
+
+    pub fn get_columns(&self) -> usize {
+        self.cols
+    }
+
+    pub fn get_rows(&self) -> usize {
+        self.rows
     }
 
     fn find_empty_row_in_column(&self, col: usize) -> Option<usize> {

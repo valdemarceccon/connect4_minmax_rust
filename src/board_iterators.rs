@@ -25,15 +25,15 @@ impl<'a> Iterator for RowIterator<'a> {
     type Item = Vec<&'a Option<board::Player>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.pos >= self.board.rows {
+        if self.pos >= self.board.get_rows() {
             return None;
         }
         let ret = self
             .board
-            .pieces
+            .get_pieces()
             .iter()
-            .skip(self.pos * self.board.cols)
-            .take(self.board.cols)
+            .skip(self.pos * self.board.get_columns())
+            .take(self.board.get_columns())
             .collect();
         self.pos += 1;
         Some(ret)
@@ -44,15 +44,15 @@ impl<'a> Iterator for ColIterator<'a> {
     type Item = Vec<&'a Option<board::Player>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.pos >= self.board.cols {
+        if self.pos >= self.board.get_columns() {
             return None;
         }
         let ret = self
             .board
-            .pieces
+            .get_pieces()
             .iter()
             .skip(self.pos)
-            .step_by(self.board.cols)
+            .step_by(self.board.get_columns())
             .collect();
         self.pos += 1;
         Some(ret)
@@ -63,13 +63,13 @@ impl<'a> Iterator for MainDiagonalIterator<'a> {
     type Item = Vec<&'a Option<board::Player>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let diag_n = self.board.rows + self.board.cols - 1;
+        let diag_n = self.board.get_rows() + self.board.get_columns() - 1;
         if self.pos >= diag_n {
             return None;
         }
 
-        let h = self.board.rows;
-        let w = self.board.cols;
+        let h = self.board.get_rows();
+        let w = self.board.get_columns();
         let mut ret = Vec::new();
 
         if self.pos < h + w - 1 {
@@ -77,8 +77,8 @@ impl<'a> Iterator for MainDiagonalIterator<'a> {
             {
                 let row = h + q - 1 - self.pos;
                 let col = q;
-                let idx = row * self.board.cols + col;
-                ret.push(&self.board.pieces[idx]);
+                let idx = row * self.board.get_columns() + col;
+                ret.push(&self.board.get_pieces()[idx]);
             }
         } else {
             return None;
@@ -94,13 +94,13 @@ impl<'a> Iterator for SecondaryDiagonalIterator<'a> {
     type Item = Vec<&'a Option<board::Player>>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let diag_n = self.board.rows + self.board.cols - 1;
+        let diag_n = self.board.get_rows() + self.board.get_columns() - 1;
         if self.pos >= diag_n {
             return None;
         }
 
-        let h = self.board.rows;
-        let w = self.board.cols;
+        let h = self.board.get_rows();
+        let w = self.board.get_columns();
         let mut ret = Vec::new();
 
         if self.pos < h + w - 1 {
@@ -108,8 +108,8 @@ impl<'a> Iterator for SecondaryDiagonalIterator<'a> {
             {
                 let row = self.pos - q;
                 let col = q;
-                let idx = row * self.board.cols + col;
-                ret.push(&self.board.pieces[idx]);
+                let idx = row * self.board.get_columns() + col;
+                ret.push(&self.board.get_pieces()[idx]);
             }
         } else {
             return None;
@@ -197,7 +197,7 @@ mod test {
         ]
         .into_iter();
 
-        for d in 0..(board.cols + board.rows - 1) * 2 {
+        for d in 0..(board.get_columns() + board.get_rows() - 1) * 2 {
             let val = it.next();
             let exp = expected_it.next();
 
