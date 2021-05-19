@@ -28,8 +28,10 @@ Since the game rules modules was getting too big, I decided to break it into sma
 - [ ] AI
   - [ ] MinMax algorithm
   - [ ] AlphaBeta pruning
-- [ ] User interface
-  - [ ] CLI
+- [x] User interface
+  - [x] Simple CLI
+    - [x] Draw board
+    - [x] Color players
   - [ ] Option\<GUI>
 - [ ] Code documentation
 
