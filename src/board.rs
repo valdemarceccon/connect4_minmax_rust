@@ -1,3 +1,4 @@
+#[derive(Debug, Clone, PartialEq)]
 pub struct Board {
     rows: usize,
     cols: usize,
@@ -8,6 +9,7 @@ pub struct Board {
 #[derive(Debug, PartialEq)]
 pub enum PlayErr {
     FullColumn,
+    OutOfBounds,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -28,6 +30,9 @@ impl Board {
     }
 
     pub fn play(&mut self, col: usize, p: Player) -> Result<(), PlayErr> {
+        if col >= self.cols {
+            return Err(PlayErr::OutOfBounds);
+        }
         let first_not_empty = self.find_empty_row_in_column(col);
         match first_not_empty {
             Some(n) => {
@@ -170,5 +175,12 @@ mod test {
         }
 
         Ok(())
+    }
+
+    #[test]
+    fn play_out_of_bounds_results_in_error() {
+        let mut board = Board::new(ROWS, COLS);
+        let r = board.play(COLS, Player::Red);
+        assert_eq!(Err(PlayErr::OutOfBounds), r);
     }
 }

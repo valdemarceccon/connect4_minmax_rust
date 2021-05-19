@@ -52,6 +52,10 @@ impl Game {
         };
         Ok(GameState::Playing)
     }
+
+    pub fn get_board(&self) -> &board::Board {
+        &self.board
+    }
 }
 
 #[cfg(test)]
@@ -89,6 +93,25 @@ mod test {
         }
 
         assert_eq!(game_state, GameState::Tie);
+
+        Ok(())
+    }
+
+    #[test]
+    fn does_not_change_state_when_some_error_occours() -> Result<(), board::PlayErr> {
+        let mut game = Game::with_size(3, 3, board::Player::Yellow);
+        game.play(0)?;
+        game.play(0)?;
+        game.play(0)?;
+        let r = game.play(0);
+        let current_player = game.current_player;
+        let current_winner = game.winner;
+        let current_board = game.board.clone();
+        assert_eq!(Err(board::PlayErr::FullColumn), r);
+
+        assert_eq!(current_player, game.current_player);
+        assert_eq!(current_winner, game.winner);
+        assert_eq!(current_board.get_pieces(), game.board.get_pieces());
 
         Ok(())
     }

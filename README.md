@@ -18,7 +18,7 @@ Since the game rules modules was getting too big, I decided to break it into sma
   - [x] Moves done by column
   - [x] `Enums` to each player
   - [x] Custom error for when a move is tried on a full column
-  - [ ] Custom error for `out of bounds` move
+  - [x] Custom error for `out of bounds` move
 - [x] Game Rules Logic
   - [x] Toggle players when a successful move is made
   - [x] Check if the game has ended
