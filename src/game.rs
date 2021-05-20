@@ -1,10 +1,12 @@
 use super::board;
 use super::validator;
+use crate::game::GameState::Playing;
+use crate::board::PlayErr;
 
 pub struct Game {
     board: board::Board,
-    current_player: board::Player,
-    winner: Option<board::Player>,
+    pub state: GameState,
+    pub current_player: board::Player,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -22,7 +24,7 @@ impl Game {
         Game {
             board: board::Board::new(ROWS, COLS),
             current_player: first_player,
-            winner: None,
+            state: Playing,
         }
     }
 
@@ -30,27 +32,30 @@ impl Game {
         Game {
             board: board::Board::new(rows, cols),
             current_player: first_player,
-            winner: None,
+            state: Playing,
         }
     }
 
-    pub fn play(&mut self, col: usize) -> Result<GameState, board::PlayErr> {
+    pub fn play(&mut self, col: usize) -> Result<(), PlayErr> {
+        if self.state != Playing {
+            return Ok(());
+        }
         self.board.play(col, self.current_player)?;
 
         if let Some(player) = validator::get_winner(&self.board) {
-            self.winner = Some(player);
-            return Ok(GameState::Winner(player));
+            self.state = GameState::Winner(player);
         }
 
         if self.board.is_board_full() {
-            return Ok(GameState::Tie);
+            self.state = GameState::Tie;
         }
 
         self.current_player = match self.current_player {
             board::Player::Yellow => board::Player::Red,
             board::Player::Red => board::Player::Yellow,
         };
-        Ok(GameState::Playing)
+
+        Ok(())
     }
 
     pub fn get_board(&self) -> &board::Board {
@@ -88,7 +93,8 @@ mod test {
         for c in 0..game.board.get_columns() {
             for _ in 0..game.board.get_rows() {
                 assert_eq!(game_state, GameState::Playing);
-                game_state = game.play(c)?;
+                game.play(c)?;
+                game_state = game.state;
             }
         }
 
@@ -105,12 +111,12 @@ mod test {
         game.play(0)?;
         let r = game.play(0);
         let current_player = game.current_player;
-        let current_winner = game.winner;
+        let current_winner = game.state;
         let current_board = game.board.clone();
         assert_eq!(Err(board::PlayErr::FullColumn), r);
 
         assert_eq!(current_player, game.current_player);
-        assert_eq!(current_winner, game.winner);
+        assert_eq!(current_winner, game.state);
         assert_eq!(current_board.get_pieces(), game.board.get_pieces());
 
         Ok(())
