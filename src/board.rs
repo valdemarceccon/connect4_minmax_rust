@@ -44,6 +44,17 @@ impl Board {
         }
     }
 
+    pub fn get_valid_moves(&self) -> Vec<usize> {
+        let mut ret = Vec::new();
+        for c in 0..self.cols {
+            if self.find_empty_row_in_column(c).is_some() {
+                ret.push(c);
+            }
+        }
+
+        ret
+    }
+
     pub fn is_board_full(&self) -> bool {
         self.played >= self.rows * self.cols
     }
