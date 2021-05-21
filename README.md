@@ -23,11 +23,9 @@ Since the game rules modules was getting too big, I decided to break it into sma
   - [x] Toggle players when a successful move is made
   - [x] Check if the game has ended
     - [x] Check if there is a winner or the game has tied
-  - [ ] Custom rules
-    - [ ] Dynamic number of pieces in a row for the game to end
-- [ ] AI
-  - [ ] MinMax algorithm
-  - [ ] AlphaBeta pruning
+- [x] AI
+  - [x] MinMax algorithm
+  - [x] AlphaBeta pruning
 - [x] User interface
   - [x] Simple CLI
     - [x] Draw board
@@ -38,10 +36,6 @@ Since the game rules modules was getting too big, I decided to break it into sma
 #### CI
 I am planning on creating a continous integration process. Since there are `unit` tests,
 it can be useful to keep unproven experimental code away from `main` branch.
-
-#### Documentation
-For now, this README is the only documentation. However this should change in the next
-couple of commits.
 
 ### Breakdown
 #### Board
@@ -65,6 +59,3 @@ If the game is finished, a `Result` is returned with the winner, if there is one
 For the end check, first a check is done in each row, column and diagonal, looking
 for 4 pieces of a single player. If there are none, then is checked if the board is
 full and if so, no further move is valid, resulting in a tie.
-
-For now the game is just like the vanilla one, finishing the game when 4 pieces are connected.
-And there are still plans to allow custom rules.

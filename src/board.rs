@@ -4,6 +4,7 @@ pub struct Board {
     cols: usize,
     pieces: Vec<Option<Player>>,
     played: usize,
+    last_move: Option<usize>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -26,6 +27,7 @@ impl Board {
             cols,
             pieces,
             played: 0,
+            last_move: None,
         }
     }
 
@@ -38,6 +40,7 @@ impl Board {
             Some(n) => {
                 self.set_piece_at(n, col, p);
                 self.played += 1;
+                self.last_move = Some(col);
                 Ok(())
             }
             None => Err(PlayErr::FullColumn),
@@ -79,6 +82,14 @@ impl Board {
         self.rows
     }
 
+    pub fn get_moves(&self) -> usize {
+        self.played
+    }
+
+    pub fn get_last_move(&self) -> Option<usize> {
+        self.last_move
+    }
+
     fn find_empty_row_in_column(&self, col: usize) -> Option<usize> {
         let row = self
             .pieces
@@ -105,6 +116,7 @@ impl Board {
 
 #[cfg(test)]
 mod test {
+
     use super::*;
     const ROWS: usize = 6;
     const COLS: usize = 6;
@@ -193,5 +205,19 @@ mod test {
         let mut board = Board::new(ROWS, COLS);
         let r = board.play(COLS, Player::Red);
         assert_eq!(Err(PlayErr::OutOfBounds), r);
+    }
+
+    #[test]
+    fn test_last_move() {
+        let mut board = Board::new(ROWS, COLS);
+        assert_eq!(board.last_move, None);
+        board
+            .play(0, Player::Red)
+            .expect("col 0 in a empty board is valid");
+        assert_eq!(board.last_move, Some(0));
+        board
+            .play(1, Player::Red)
+            .expect("col 1 in a empty board is valid");
+        assert_eq!(board.last_move, Some(1));
     }
 }

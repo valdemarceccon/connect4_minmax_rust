@@ -1,8 +1,9 @@
 use super::board;
 use super::validator;
-use crate::game::GameState::Playing;
 use crate::board::PlayErr;
+use crate::game::GameState::Playing;
 
+#[derive(Clone)]
 pub struct Game {
     board: board::Board,
     pub state: GameState,
