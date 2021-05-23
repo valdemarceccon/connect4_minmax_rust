@@ -2,19 +2,32 @@ use std::io;
 use std::io::Write;
 
 use colored::Colorize;
+use connect4_core::ai;
 use connect4_core::board;
 use connect4_core::game;
 
+const STARTING_PLAYER: board::Player = board::Player::Yellow;
+
 fn main() {
-    let mut game = game::Game::new(board::Player::Yellow);
+    let ai_player = STARTING_PLAYER;
+
+    let mut game = game::Game::new(board::Player::Red);
     print!("\x1B[2J");
     display_board(game.get_board(), None);
 
     while game.state == game::GameState::Playing {
-        let msg = match read_input(game.current_player) {
-            Ok(0) => Some(String::from("Jogada invalida")),
-            Ok(v) => make_play(&mut game, v - 1),
-            Err(e) => Some(String::from(e)),
+        let msg = if game.current_player == ai_player {
+            print!("thinking...");
+            io::stdout().flush().unwrap();
+            let ai_move = ai::get_ai_move(&game);
+            println!();
+            make_play(&mut game, ai_move)
+        } else {
+            match read_input(game.current_player) {
+                Ok(0) => Some(String::from("Jogada invalida")),
+                Ok(v) => make_play(&mut game, v - 1),
+                Err(e) => Some(String::from(e)),
+            }
         };
 
         if game.state != game::GameState::Playing {
@@ -25,7 +38,7 @@ fn main() {
             let buf = &mut String::new();
             if io::stdin().read_line(buf).is_ok() {
                 match buf.trim() {
-                    "Y" | "y" | "" => game = game::Game::new(board::Player::Yellow),
+                    "Y" | "y" | "" => game = game::Game::new(STARTING_PLAYER),
                     _ => (),
                 }
             }
