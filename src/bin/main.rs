@@ -9,9 +9,9 @@ use connect4_core::game;
 const STARTING_PLAYER: board::Player = board::Player::Yellow;
 
 fn main() {
-    let ai_player = STARTING_PLAYER;
+    let ai_player = board::Player::Red;
 
-    let mut game = game::Game::new(board::Player::Red);
+    let mut game = game::Game::new(STARTING_PLAYER);
     print!("\x1B[2J");
     display_board(game.get_board(), None);
 
