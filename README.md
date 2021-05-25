@@ -1,6 +1,8 @@
 ### Connect 4 AI using MinMax with AlphaBeta pruning
 This project is being done as learning as a way to learn rust.
 
+![AI against AI](/sample.gif "AI against AI")
+
 ### Goals
 #### Game and AI
 In the end I would expect to have a module to deal with board logic, game rules
