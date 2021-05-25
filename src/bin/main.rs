@@ -17,14 +17,14 @@ fn main() {
 
     while game.state == game::GameState::Playing {
         let msg = if game.current_player == ai_player {
-            print!("thinking...");
+            print!("Thinking...");
             io::stdout().flush().unwrap();
             let ai_move = ai::get_ai_move(&game);
             println!();
             make_play(&mut game, ai_move)
         } else {
             match read_input(game.current_player) {
-                Ok(0) => Some(String::from("Jogada invalida")),
+                Ok(0) => Some(String::from("Invalid move")),
                 Ok(v) => make_play(&mut game, v - 1),
                 Err(e) => Some(String::from(e)),
             }
@@ -56,15 +56,15 @@ fn make_play(game: &mut game::Game, m: usize) -> Option<String> {
     match game.play(m) {
         Ok(()) => match game.state {
             game::GameState::Winner(p) => match p {
-                board::Player::Red => Some(format!("{} ganhou", CIRCLE.red())),
-                board::Player::Yellow => Some(format!("{} ganhou", CIRCLE.yellow())),
+                board::Player::Red => Some(format!("Winner {}", CIRCLE.red())),
+                board::Player::Yellow => Some(format!("Winner {}", CIRCLE.yellow())),
             },
-            game::GameState::Tie => Some(String::from("Empate")),
+            game::GameState::Tie => Some(String::from("Draw")),
             game::GameState::Playing => None,
         },
         Err(e) => match e {
-            board::PlayErr::FullColumn => Some(String::from("coluna cheia")),
-            board::PlayErr::OutOfBounds => Some(String::from("jogada invalida")),
+            board::PlayErr::FullColumn => Some(String::from("Full Column")),
+            board::PlayErr::OutOfBounds => Some(String::from("Invalid Move")),
         },
     }
 }
@@ -74,12 +74,12 @@ fn read_input<'a>(player: board::Player) -> Result<usize, &'a str> {
         board::Player::Yellow => format!("{}", CIRCLE.yellow()),
         board::Player::Red => format!("{}", CIRCLE.red()),
     };
-    print!("{} turn to play: ", p);
+    print!("{} Turn to play: ", p);
     io::stdout().flush().unwrap();
     let buf = &mut String::new();
     match io::stdin().read_line(buf) {
-        Ok(_) => buf.trim().parse().map_err(|_| "invalid play"),
-        Err(_) => Err("problema"),
+        Ok(_) => buf.trim().parse().map_err(|_| "Invalid Play"),
+        Err(_) => Err("Error reading buffer"),
     }
 }
 
